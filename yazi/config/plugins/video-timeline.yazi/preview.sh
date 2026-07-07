@@ -34,8 +34,8 @@ PREVIEW_FPS=12        # sampling rate for short clips (half-rate proxy of 24fps)
 MAXFRAMES=360         # hard cap on extracted frames per video
 LONG_VIDEO_SECS=60    # beyond this, fall back to sparse seek sampling
 SPARSE_N=10           # frame count for the sparse fallback
-OUT_W=800             # thumbnails fit within this box, aspect preserved
-OUT_H=800
+OUT_W=1200            # thumbnails fit within this box, aspect preserved
+OUT_H=1200
 
 cache_key() {
   local st
