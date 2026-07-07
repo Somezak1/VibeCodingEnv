@@ -1,0 +1,96 @@
+# ============================================
+# Ghostty Terminal - Complete Configuration
+# ============================================
+# File: ~/.config/ghostty/config
+# Reload: Cmd+Shift+, (macOS)
+# View options: ghostty +show-config --default --docs
+
+# --- Typography ---
+font-family = "Maple Mono NF CN"
+font-size = 14
+# font-thicken / adjust-cell-height 会让 Claude Code 的 Ink 渲染器
+# 行高/glyph 宽度计算和实际像素不一致，长输出会越漂越歪、产生文字重叠。
+# font-thicken = true
+# adjust-cell-height = 2
+
+# --- Theme and Colors ---
+# Catppuccin with automatic light/dark switching
+theme = Catppuccin Mocha
+
+# 强制最低对比度 4.5:1（WCAG AA 大字标准）。
+# Claude Code 等 TUI 大量使用 dim/bright-black 表达次要信息，
+# 在深色主题 + 半透明背景下经常对比度只有 2-3:1，看着像"黑色字看不清"。
+# Ghostty 会自动把对比度不达标的前景色提亮到 4.5:1，不改色调。
+minimum-contrast = 4.5
+
+# --- Window and Appearance ---
+background-opacity = 0.85
+background-blur-radius = 30
+macos-titlebar-style = transparent
+window-padding-x = 10
+window-padding-y = 8
+window-save-state = always
+window-theme = auto
+
+# --- Cursor ---
+cursor-style = bar
+cursor-style-blink = true
+cursor-opacity = 0.8
+
+# --- Mouse ---
+mouse-hide-while-typing = true
+copy-on-select = clipboard
+
+# --- Quick Terminal (Quake-style dropdown) ---
+quick-terminal-position = top
+quick-terminal-screen = mouse
+quick-terminal-autohide = true
+quick-terminal-animation-duration = 0.15
+
+# --- Security ---
+clipboard-paste-protection = true
+clipboard-paste-bracketed-safe = true
+
+# --- Shell Integration ---
+shell-integration = detect
+
+# --- Keybindings ---
+# Tabs
+keybind = cmd+t=new_tab
+keybind = cmd+shift+left=previous_tab
+keybind = cmd+shift+right=next_tab
+keybind = cmd+w=close_surface
+
+# Splits
+keybind = cmd+d=new_split:right
+keybind = cmd+shift+d=new_split:down
+keybind = cmd+alt+left=goto_split:left
+keybind = cmd+alt+right=goto_split:right
+keybind = cmd+alt+up=goto_split:top
+keybind = cmd+alt+down=goto_split:bottom
+
+# Font size
+keybind = cmd+plus=increase_font_size:1
+keybind = cmd+minus=decrease_font_size:1
+keybind = cmd+zero=reset_font_size
+
+# Quick terminal global hotkey
+keybind = global:ctrl+grave_accent=toggle_quick_terminal
+
+# Splits management
+keybind = cmd+shift+e=equalize_splits
+keybind = cmd+shift+f=toggle_split_zoom
+
+# Reload config
+keybind = cmd+shift+comma=reload_config
+
+# Claude Code 渲染救急：
+# - cmd+k 清屏（清干净屏幕 + Ink 状态）
+# - cmd+shift+k 硬 reset 终端（DECSC reset，最彻底）
+# Ctrl+L 救不了 Ink 内部 virtual buffer，这两个才管用。
+keybind = cmd+k=clear_screen
+keybind = cmd+shift+k=reset
+
+# --- Performance ---
+# Generous scrollback (25MB)
+scrollback-limit = 25000000
