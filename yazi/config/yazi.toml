@@ -1,0 +1,17 @@
+# --- 方案 B：悬停视频时，预览栏自动轮播时间轴帧（video-timeline 插件）---
+[plugin]
+prepend_previewers = [
+  { mime = "video/*", run = "video-timeline" },
+  { mime = "image/*", run = "image-info" },
+]
+
+# 换帧时立即渲染新图，消除 yazi 默认 30ms 的防抖延迟造成的空白闪烁
+[preview]
+image_delay = 0
+
+# --- 回车直接用 IINA 播放；按 o 可选 mpv 终端内播放（不弹窗但流畅度有限）---
+[opener]
+play = [
+  { run = '"$HOME/.config/yazi/iina-open.sh" "$@"', orphan = true, desc = "IINA 播放（多选自动平铺）" },
+  { run = 'mpv --vo=kitty --profile=sw-fast --really-quiet "$@"', block = true, desc = "终端内播放 (mpv)" },
+]

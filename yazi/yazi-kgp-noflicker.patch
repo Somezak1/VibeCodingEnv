@@ -1,0 +1,19 @@
+diff --git a/yazi-adapter/src/drivers/kgp.rs b/yazi-adapter/src/drivers/kgp.rs
+index fdab825..f5c5a42 100644
+--- a/yazi-adapter/src/drivers/kgp.rs
++++ b/yazi-adapter/src/drivers/kgp.rs
+@@ -321,7 +321,13 @@ impl Kgp {
+ 		let b1 = Self::encode(img).await?;
+ 		let b2 = Self::place(&area)?;
+ 
+-		Adapter::Kgp.image_hide()?;
++		// Same-area frame swap (e.g. video preview slideshows): retransmitting
++		// under the same image id replaces the picture in place, and the
++		// unicode placeholders are rewritten identically below — erasing first
++		// only produces a blank flash between frames, so skip it.
++		if Adapter::Kgp.shown_load() != Some(area) {
++			Adapter::Kgp.image_hide()?;
++		}
+ 		Adapter::shown_store(area);
+ 		Emulator::move_lock((area.x, area.y), |w| {
+ 			w.write_all(&b1)?;
