@@ -3,8 +3,7 @@
 
 local M = {}
 
-local META_COLS = 26 -- metadata sidebar width when placed beside the image
-local META_LINES = 5 -- metadata height when placed below the image (narrow panes)
+local META_LINES = 5
 
 local function gcd(a, b)
 	while b > 0 do
@@ -72,40 +71,11 @@ local function probe(path)
 	return codec, tonumber(w), tonumber(h)
 end
 
--- Place the metadata text beside the image when there's enough leftover
--- width (common for portrait photos, which are height-bound and leave
--- spare columns), otherwise stack it below (narrow panes / wide images).
-local function meta_area_for(area, shown)
-	if not shown then
-		return ui.Rect({
-			x = area.x,
-			y = area.y + math.max(0, area.h - META_LINES),
-			w = area.w,
-			h = math.min(META_LINES, area.h),
-		})
-	end
-
-	local right_gap = area.x + area.w - (shown.x + shown.w)
-	if right_gap >= META_COLS + 1 then
-		local mx = shown.x + shown.w + 1
-		return ui.Rect({ x = mx, y = area.y, w = area.x + area.w - mx, h = area.h })
-	end
-
-	local ty = shown.y + shown.h + 1
-	local th = area.y + area.h - ty
-	if th <= 0 then
-		ty = area.y + math.max(0, area.h - META_LINES)
-		th = math.min(META_LINES, area.h)
-	end
-	return ui.Rect({ x = area.x, y = ty, w = area.w, h = th })
-end
-
 function M:peek(job)
 	local area = job.area
+	local top = ui.Rect({ x = area.x, y = area.y, w = area.w, h = math.max(1, area.h - META_LINES) })
 
-	-- Show against the FULL pane area so a portrait image can use the
-	-- pane's entire height; metadata is placed afterwards (see meta_area_for).
-	local shown = ya.image_show(job.file.url, area)
+	local shown = ya.image_show(job.file.url, top)
 
 	local codec, w, h = probe(tostring(job.file.url))
 
@@ -118,7 +88,26 @@ function M:peek(job)
 	end
 	lines[#lines + 1] = string.format("大小    %s", human_size(job.file.cha and job.file.cha.len or nil))
 
-	ya.preview_widget(job, { ui.Text(table.concat(lines, "\n")):area(meta_area_for(area, shown)) })
+	-- Anchor the text right below the displayed image; fall back to the
+	-- bottom of the pane if the image could not be shown.
+	local bottom
+	if shown then
+		local ty = shown.y + shown.h + 1
+		local th = area.y + area.h - ty
+		if th > 0 then
+			bottom = ui.Rect({ x = area.x, y = ty, w = area.w, h = math.min(META_LINES, th) })
+		end
+	end
+	if not bottom then
+		bottom = ui.Rect({
+			x = area.x,
+			y = area.y + math.max(0, area.h - META_LINES),
+			w = area.w,
+			h = math.min(META_LINES, area.h),
+		})
+	end
+
+	ya.preview_widget(job, { ui.Text(table.concat(lines, "\n")):area(bottom) })
 end
 
 function M:seek() end

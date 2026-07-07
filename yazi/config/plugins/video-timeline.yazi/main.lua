@@ -10,10 +10,16 @@ local SCRIPT = os.getenv("HOME") .. "/.config/yazi/plugins/video-timeline.yazi/p
 local SLICE = 100000        -- effectively unbounded
 local TICK_SECONDS = 0.05   -- playback clock; effective rate ~10-12fps after overhead
 local READ_TIMEOUT_MS = 500 -- child read timeout
-local META_COLS = 26        -- metadata sidebar width when placed beside the image
-local META_LINES = 6        -- metadata height when placed below the image (narrow panes)
+local META_LINES = 7        -- bottom pane height in terminal rows
 
 -- --- helpers ---------------------------------------------------------------
+
+local function clamp_int(n, lo, hi)
+	n = tonumber(n) or 0
+	if n < lo then return lo end
+	if n > hi then return hi end
+	return n
+end
 
 local function normalize_offset(skip)
 	-- convert any numeric skip into 0..SLICE-1
@@ -27,6 +33,16 @@ local function strip_ansi(s)
 	s = s:gsub("\27%[[%;%d]*K", "")
 	s = s:gsub("\27%[[%;%d]*%G", "")
 	return s
+end
+
+local function split_top_bottom(area, bottom_rows)
+	-- Keep a fixed-height metadata area at the bottom so layout is stable.
+	local x, y, w, h = area.x, area.y, area.w, area.h
+	bottom_rows = clamp_int(bottom_rows or META_LINES, 6, math.max(6, h - 2))
+
+	local top = ui.Rect({ x = x, y = y, w = w, h = h - bottom_rows })
+	local bottom = ui.Rect({ x = x, y = y + (h - bottom_rows), w = w, h = bottom_rows })
+	return top, bottom
 end
 
 local function centered_msg_rect(area, msg_len)
@@ -43,13 +59,13 @@ local function show_status(job, area, msg)
 	ya.preview_widget(job, { ui.Text(msg):area(r) })
 end
 
-local function spawn_preview(path, offset, area)
+local function spawn_preview(path, offset, top_area)
 	-- preview.sh supports extra args; it can ignore them.
 	local args = {
 		"--path", path,
 		"--offset", tostring(offset),
-		"--topw", tostring(area.w),
-		"--toph", tostring(area.h),
+		"--topw", tostring(top_area.w),
+		"--toph", tostring(top_area.h),
 	}
 
 	return Command(SCRIPT)
@@ -73,10 +89,8 @@ local function should_keep_text(line)
 	return true
 end
 
-local function read_child_output(job, child, area)
-	-- Image is shown against the FULL pane area (not pre-shrunk for text),
-	-- so a portrait video can use the pane's entire height. Metadata gets
-	-- placed afterwards, beside or below the image (see meta_area_for).
+local function read_child_output(job, child, top_area, bottom_area)
+	-- Reads the entire child output, but caps stored metadata lines to bottom_area.h
 	local meta, errs = {}, {}
 	local shown = nil -- actual area the image was drawn in
 
@@ -85,7 +99,7 @@ local function read_child_output(job, child, area)
 
 		if event == 3 then
 			-- timeout
-			show_status(job, area, "Loading...")
+			show_status(job, bottom_area, "Loading...")
 		elseif event == 2 then
 			-- EOF
 			break
@@ -96,9 +110,9 @@ local function read_child_output(job, child, area)
 			-- stdout
 			local img = parse_image_marker(line)
 			if img then
-				shown = ya.image_show(Url(img), area)
+				shown = ya.image_show(Url(img), top_area)
 			else
-				if should_keep_text(line) and #meta < 20 then
+				if should_keep_text(line) and #meta < bottom_area.h then
 					table.insert(meta, strip_ansi(line))
 				end
 			end
@@ -107,34 +121,6 @@ local function read_child_output(job, child, area)
 
 	child:start_kill()
 	return errs, meta, shown
-end
-
--- Place the metadata text beside the image when there's enough leftover
--- width (common for portrait 9:16 videos, which are height-bound and leave
--- spare columns), otherwise stack it below (narrow panes / wide images).
-local function meta_area_for(area, shown)
-	if not shown then
-		return ui.Rect({
-			x = area.x,
-			y = area.y + math.max(0, area.h - META_LINES),
-			w = area.w,
-			h = math.min(META_LINES, area.h),
-		})
-	end
-
-	local right_gap = area.x + area.w - (shown.x + shown.w)
-	if right_gap >= META_COLS + 1 then
-		local mx = shown.x + shown.w + 1
-		return ui.Rect({ x = mx, y = area.y, w = area.x + area.w - mx, h = area.h })
-	end
-
-	local ty = shown.y + shown.h + 1
-	local th = area.y + area.h - ty
-	if th <= 0 then
-		ty = area.y + math.max(0, area.h - META_LINES)
-		th = math.min(META_LINES, area.h)
-	end
-	return ui.Rect({ x = area.x, y = ty, w = area.w, h = th })
 end
 
 local function render_text(job, area, errs, meta)
@@ -156,18 +142,29 @@ function M:peek(job)
 	local file = job.file
 	local area = job.area
 
+	local top, bottom = split_top_bottom(area, META_LINES)
+
 	local offset = normalize_offset(job.skip)
 	local file_url = tostring(file.url)
 
-	local child = spawn_preview(file_url, offset, area)
+	local child = spawn_preview(file_url, offset, top)
 	if not child then
-		render_text(job, area, {}, { "Failed to start preview script\n" })
+		render_text(job, bottom, {}, { "Failed to start preview script\n" })
 		return
 	end
 
-	local errs, meta, shown = read_child_output(job, child, area)
+	local errs, meta, shown = read_child_output(job, child, top, bottom)
 
-	render_text(job, meta_area_for(area, shown), errs, meta)
+	-- Anchor the metadata right below the displayed image instead of pinning
+	-- it to the bottom of the pane (which leaves an ugly gap on tall panes).
+	if shown then
+		local ty = shown.y + shown.h + 1
+		local th = area.y + area.h - ty
+		if th > 0 then
+			bottom = ui.Rect({ x = area.x, y = ty, w = area.w, h = math.min(META_LINES, th) })
+		end
+	end
+	render_text(job, bottom, errs, meta)
 
 	schedule_next(file_url, offset)
 end
