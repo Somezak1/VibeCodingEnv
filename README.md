@@ -2,75 +2,91 @@
 
 # 🛠️ VibeCodingEnv
 
-**一份可复刻的 macOS 终端开发环境**
+**一套开箱即用的 macOS 终端工作环境**
 
-克隆本仓库 → 交给 Claude Code 按本文执行 → 新 Mac 上十几分钟复刻整套环境
+高颜值终端 · 智能提示符 · 会"播放视频"的文件管理器 · 现代 CLI 工具全家桶
+
+把仓库交给 Claude Code，十几分钟在任何一台 Mac 上完整复刻
 
 </div>
 
 ---
 
-## 这个仓库是什么？
+![终端整体效果：Ghostty + starship + lsd + bat](assets/terminal.png)
 
-我在主力 Mac 上打磨了一套顺手的终端工作环境（终端模拟器、命令行提示符、文件管理器和若干现代 CLI 工具）。这个仓库把**所有配置文件、插件、源码补丁和安装步骤**固化下来——换新电脑或重装系统时，不用再凭记忆逐个装工具、翻聊天记录找配置，把仓库交给 Claude Code（或自己照着做）即可原样重建。
+<p align="center"><i>↑ 实际效果：Ghostty 毛玻璃窗口、starship 彩色分段提示符、lsd 图标文件列表、bat 语法高亮</i></p>
 
-三条设计原则：
+## 为什么值得装？
 
-1. **仓库即唯一事实来源** —— 所有配置以仓库内副本为准。引用过的外部 gist 已经完整复制入库（防止原链接哪天失效），出处在各节注明；
-2. **不含任何密钥** —— API key / token 一律不入库；
-3. **每一步可验证** —— 每节末尾都写明"装完应该是什么样"。
+macOS 自带的终端体验停留在十年前：纯黑窗口、单调的 `ls` 列表、`cat` 看代码没有高亮、预览一个视频要离开终端去双击。这套环境把日常终端操作升级成这样：
 
-## 工具总览
+- **打开终端就赏心悦目** —— GPU 加速渲染、半透明毛玻璃、精心调校的对比度（暗色主题下再也没有"看不清的灰字"）；
+- **提示符会说话** —— 当前目录、git 分支和状态、语言版本、上条命令耗时，一眼全有，不用再敲 `git status` 和 `pwd`；
+- **文件管理不用离开终端** —— 键盘流浏览文件，图片直接显示在终端里，**视频甚至会自动动起来**（见下文）；
+- **每个老命令都有更好的替代** —— `cat`→`bat`（高亮+行号）、`ls`→`lsd`（图标+彩色）、`cd`→`zoxide`（跳转常用目录）、裸 git→`lazygit`（可视化操作）。
 
-| 工具 | 是什么 | 为什么用它 |
-|---|---|---|
-| [Ghostty](https://ghostty.org) | GPU 加速的终端模拟器 | 快、原生 macOS 手感；支持 kitty 图形协议（yazi 在终端里显示图片/视频预览的前提） |
-| [starship](https://starship.rs) | 跨 shell 的命令行提示符 | Catppuccin 主题的分段彩色提示符，自动显示当前目录、git 分支、语言版本、命令耗时 |
-| [yazi](https://github.com/sxyazi/yazi) | 终端文件管理器 | 本仓库的重头戏：被深度定制成了「视频审片工作台」，见下一节 |
-| [bat](https://github.com/sharkdp/bat) | `cat` 替代品 | 看文件自带语法高亮和行号 |
-| [lazygit](https://github.com/jesseduffield/lazygit) | git 终端 UI | 可视化地暂存/提交/切分支，比裸敲 git 命令快得多 |
-| [lsd](https://github.com/lsd-rs/lsd) | `ls` 替代品 | 图标 + 彩色输出，配合 `ll` 别名 |
-| [zoxide](https://github.com/ajeetdsouza/zoxide) | `cd` 替代品 | 记住你常去的目录，`z 关键词` 直接跳转 |
+## 亮点：会播放视频的文件管理器
 
-## yazi「审片工作台」是什么？
+这是本仓库最下功夫的部分。yazi 是一个终端文件管理器，默认只能给视频显示一张静态缩略图；经过本仓库的深度定制（插件魔改 + 6 行 yazi 源码补丁 + 本地编译），它变成了一个**视频审片工作台**：
 
-**背景**：我用 AI 工具批量生成短视频素材（9:16 竖屏短片），需要频繁地从几十个草稿里快速挑出可用镜头。默认的工作方式——逐个双击打开播放器看——太慢；yazi 默认的视频预览又只是一张静态缩略图，看不出运镜和瑕疵。
+![yazi 视频预览演示](assets/yazi-preview.gif)
 
-这套定制把「浏览 → 预判 → 细看 → 对比」压缩成四个动作：
+<p align="center"><i>↑ 光标停在视频上，右侧预览栏自动以约 12fps 连续轮播整条视频（无闪屏），下方显示中文标签的完整参数</i></p>
 
-| 动作 | 效果 |
+| 你的操作 | 发生什么 |
 |---|---|
-| **光标悬停**在视频上 | 右侧预览栏以约 12fps 自动轮播**整条视频的连续画面**（近似低帧率播放，不是幻灯片跳切），且换帧无闪屏；画面下方显示中文标签的参数：分辨率（含宽高比）、时长、帧率、编码、码率、体积、音频 |
-| **光标悬停**在图片上 | 显示图片 + 分辨率（含宽高比）、格式、体积 |
-| **回车** | 调用 IINA（macOS 原生播放器）弹出 **2 倍尺寸窗口**精细回放，可逐帧查看 |
-| **空格多选 + 回车** | 多个 IINA 窗口自动**横向平铺、整组居中**（选 2 个时接缝正好压在屏幕中线上），并排对比不同版本一目了然 |
+| 光标悬停视频 | 预览栏像低帧率播放一样动起来，快速判断内容与运镜；下方显示分辨率（含宽高比）、时长、帧率、编码、码率、体积、有无音轨 |
+| 光标悬停图片 | 显示图片 + 分辨率/格式/体积 |
+| 回车 | 调用 IINA 播放器弹出 2 倍尺寸窗口，可逐帧细看 |
+| 空格多选 + 回车 | 多个播放窗口**自动并排平铺、整组居中**，并排对比不同版本 |
 
-> 即使你不做视频，这套配置也值得装：图片/视频的预览体验远好于 yazi 默认状态。
+![IINA 双窗自动平铺](assets/iina-tiling.jpg)
 
-三层实现（详见 [`yazi/README.md`](yazi/README.md)）：
+<p align="center"><i>↑ 多选两个视频回车：窗口自动并排、接缝正好在屏幕中线</i></p>
 
-- **配置与插件**：魔改版 `video-timeline` 插件（单次 ffmpeg 解码抽帧条、竖屏不裁剪、自适应片长）+ 自写 `image-info` 插件 + IINA 打开/平铺脚本；
-- **IINA 偏好**：打开视频时窗口自动调整为视频 2 倍尺寸；
-- **源码补丁**：6 行 yazi 补丁消除轮播换帧闪屏（同区域换帧跳过"先擦除再重绘"），需从源码编译一次。
+这套能力对谁有用：需要批量筛选视频素材的人（剪辑、AI 生成内容审片、素材库整理），或者单纯想要"终端里预览媒体文件不再是黑盒"的所有人。
+
+> 无闪屏轮播的原理：yazi 换帧时默认"先擦除再重绘"，会产生肉眼可见的空白闪烁。本仓库附带一个 6 行源码补丁（`yazi/yazi-kgp-noflicker.patch`），利用 kitty 图形协议"同 id 重传即原地替换"的特性跳过擦除，实现双缓冲级的无缝换帧。
+
+## 顺手的 git：lazygit
+
+![lazygit 界面](assets/lazygit.png)
+
+<p align="center"><i>↑ lazygit：左侧仓库全景（文件/分支/提交），右侧实时 diff——图中显示的正是上述防闪屏补丁</i></p>
+
+暂存某几行、改写提交、交互式 rebase 这些裸 git 里让人头疼的操作，在 lazygit 里都是一两个按键。
 
 ---
 
-## 重建步骤
+## 安装
 
-> **给 Claude Code 的总指引**：按第 0-7 节顺序执行，无需询问额外决策。
+### 方式一：交给 Claude Code（推荐）
+
+克隆仓库后，对 Claude Code 说一句：
+
+> 请按照这个仓库 README 的"分步安装"一节，从第 0 步执行到第 7 步。
+
+### 方式二：手动安装
+
+跟着下面的分步安装逐节执行即可，每节末尾都有验证方法。
+
+> **前提**：Apple Silicon Mac（Intel 也可，见 FAQ）+ [Homebrew](https://brew.sh)。
+> 终端需支持 kitty 图形协议（本套默认的 Ghostty 即支持；iTerm2 不适用）。
+
+## 分步安装
+
+> **给 Claude Code 的执行指引**：按第 0-7 节顺序执行，无需询问额外决策。
 > 所有配置一律以本仓库内的副本为准，用 `cp` 部署，不要从网络重新下载。
 
-### 0. 前置
+### 0. 前置：字体
 
 ```bash
-# Homebrew（如未安装）
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-# Nerd 字体（Ghostty 配置指定的字体，也是 starship 图标不乱码的前提）
 brew install --cask font-maple-mono-nf-cn
 ```
 
-### 1. Ghostty
+Maple Mono NF CN 是一款带图标字符（Nerd Font）的中英文等宽字体——终端里的文件夹图标、git 符号、提示符箭头都靠它。
+
+### 1. Ghostty（终端模拟器）
 
 ```bash
 brew install --cask ghostty
@@ -78,45 +94,40 @@ mkdir -p ~/.config/ghostty
 cp ghostty/config ~/.config/ghostty/config
 ```
 
-配置出处：基于 [zhangchitc 的 gist](https://gist.github.com/zhangchitc/7dead7c1b517390e061e07759ed80277)，本仓库版本额外包含三处本机踩坑后的修正——
+配置基于 [zhangchitc 的 gist](https://gist.github.com/zhangchitc/7dead7c1b517390e061e07759ed80277)（已复制入库），并额外修正了三处实际使用中踩到的坑：禁用会导致 TUI 应用（如 Claude Code）文字重叠的两个字体选项；强制最低对比度 4.5:1 让暗淡文字可读；增加 `cmd+k` / `cmd+shift+k` 清屏与硬重置快捷键。
 
-- 禁用 `font-thicken` / `adjust-cell-height`（会让 Claude Code 的 Ink 渲染器行高计算失准，长输出文字重叠）；
-- `minimum-contrast = 4.5`（半透明深色背景下，TUI 的暗淡文字对比度常常只有 2-3:1，看不清；此项让 Ghostty 自动提亮到 WCAG AA 标准）；
-- `cmd+k` 清屏 / `cmd+shift+k` 硬重置终端（Claude Code 渲染花屏时的救急键，`Ctrl+L` 救不了）。
+配套的 `ghostty/claude-term-fix.zsh` 是 Ghostty 1.3.x 下 Claude Code 渲染异常的变通函数（见第 7 节）。
 
-**验证**：新开 Ghostty 窗口应为半透明毛玻璃 + Catppuccin Mocha 配色 + Maple Mono 字体。
+**验证**：新开 Ghostty 应为半透明毛玻璃窗口 + Catppuccin Mocha 配色。
 
-### 2. starship
+### 2. starship（提示符）
 
 ```bash
 brew install starship
 cp starship/starship.toml ~/.config/starship.toml
 ```
 
-配置出处：[zhangchitc 的 gist](https://gist.github.com/zhangchitc/62f5dca64c599084f936fda9963f1100)。文件里有大量 Nerd Font 专用字符，**务必 `cp` 部署，不要手抄或让 AI 转写**（本仓库就曾因转写导致字形损坏，后改为原始字节上传）。
+配置来自 [zhangchitc 的 gist](https://gist.github.com/zhangchitc/62f5dca64c599084f936fda9963f1100)（已复制入库）。文件含大量 Nerd Font 特殊字符，**务必用 `cp` 部署，不要手抄或让 AI 转写**（会静默损坏字形）。
 
-需在 `~/.zshrc` 追加初始化行（见第 7 节）。
+**验证**：重开终端（并完成第 7 节的 init 行）后，提示符应为彩色分段胶囊样式，无 `?` 或方框乱码。
 
-**验证**：重开终端后提示符为彩色分段胶囊样式（红色 OS 段 → 橙色路径段 → 黄色 git 段），图标无 `?` 或方框乱码。
-
-### 3. yazi（含审片工作台）
+### 3. yazi（文件管理器 + 审片工作台）
 
 ```bash
 cd yazi
 bash setup.sh                 # 安装依赖（yazi/ffmpeg/mpv/IINA）+ 部署配置插件 + 写 IINA 偏好
-bash build-patched-yazi.sh    # 编译防闪屏补丁版 yazi 并安装（一次性，约 10 分钟）
+bash build-patched-yazi.sh    # 编译防闪屏补丁版 yazi（一次性，约 10 分钟）
 cd ..
 ```
 
-需在 `~/.zshrc` 追加 `y` 唤起函数（见第 7 节）。
-
-**验证**：进入 yazi 悬停一个视频——预览栏应自动轮播且换帧无闪屏，画面下方有中文参数；回车弹出 IINA 大窗口；空格选中两个视频再回车，两个窗口并排铺在屏幕中央。
+**验证**：进入 yazi 悬停一个视频，预览应自动轮播且无闪屏；回车弹出 IINA 大窗口；多选两个视频回车，窗口并排平铺。
 
 ⚠️ 两个预期内的现象：
-- 首次多选回车时 macOS 会弹「"Ghostty" 想要控制 "System Events"」的授权框——窗口平铺脚本需要此权限，点一次"允许"即可；
-- 终端必须支持 kitty 图形协议（Ghostty / kitty / WezTerm）。iTerm2 走不同的图片协议，防闪屏补丁对它无效。
 
-### 4. bat
+- 首次多选回车时 macOS 会弹「"Ghostty" 想要控制 "System Events"」授权框——窗口平铺需要此权限，允许一次即可；
+- 首次悬停某个视频时前 1-2 秒是静止首帧（后台在抽帧），之后自动开始轮播，同一视频再次悬停即秒开。
+
+### 4. bat（更好的 cat）
 
 ```bash
 brew install bat
@@ -124,31 +135,31 @@ mkdir -p "$(bat --config-dir)"
 cp bat/config "$(bat --config-file)"
 ```
 
-**验证**：`bat` 任意代码文件，应有 Monokai Extended 高亮和行号。
+**验证**：`bat` 任意代码文件，应有语法高亮和行号。
 
-### 5. lazygit
+### 5. lazygit（git 终端 UI）
 
 ```bash
 brew install lazygit
 ```
 
-当前使用默认配置即可用。如需自定义，路径为 `~/Library/Application Support/lazygit/config.yml`（仓库 `lazygit/config.yml` 是带注释的占位模板）。
+默认配置即可用。自定义路径：`~/Library/Application Support/lazygit/config.yml`（仓库内 `lazygit/config.yml` 为占位模板）。
 
-**验证**：任意 git 仓库内运行 `lazygit` 能打开 TUI。
+**验证**：任意 git 仓库内运行 `lazygit` 打开如上图的界面。
 
-### 6. lsd
+### 6. lsd（更好的 ls）
 
 ```bash
 brew install lsd
 ```
 
-配置就是 `ll` 别名（见第 7 节）。
+配置就是第 7 节里的 `ll` 别名。
 
-**验证**：`ll` 输出带文件类型图标和彩色列。
+**验证**：`ll` 输出带图标和彩色列。
 
 ### 7. ~/.zshrc 汇总
 
-以下内容追加到 `~/.zshrc`（各片段在对应工具文件夹里也有独立副本）：
+以下内容追加到 `~/.zshrc`（各片段在对应工具文件夹中也有独立副本）：
 
 ```sh
 # zoxide（目录跳转）
@@ -169,7 +180,7 @@ function y() {
 # lsd
 alias ll="lsd -hl"
 
-# Ghostty 1.3.x 下 Claude Code 渲染损坏的变通（详见 ghostty/claude-term-fix.zsh 注释）
+# Ghostty 1.3.x 下 Claude Code 渲染异常的变通（详见 ghostty/claude-term-fix.zsh 注释）
 claude() {
   if [[ "$TERM" == xterm-ghostty ]]; then
     TERM=xterm-256color command claude "$@"
@@ -185,18 +196,27 @@ alias clauded="claude --dangerously-skip-permissions"
 ## 常见问题
 
 **Q：为什么 yazi 要 `brew pin`？**
-防闪屏功能是打在 yazi 源码上的补丁、本地编译的二进制。`brew pin` 防止日后 `brew upgrade` 把它静默换回官方版（表现为轮播重新开始闪屏）。升级方法见 `yazi/README.md`。
-
-**Q：悬停视频时第一秒是静止画面？**
-正常。首次悬停会在后台把整条视频抽成帧条（几秒内完成），期间先显示首帧，抽完自动开始轮播；同一视频第二次悬停即秒开。
+无闪屏轮播依赖打在 yazi 源码上的补丁和本地编译的二进制。`brew pin` 防止 `brew upgrade` 把它静默换回官方版（表现为轮播重新开始闪屏）。升级方法见 `yazi/README.md`。
 
 **Q：视频轮播为什么是 12fps 而不是更流畅？**
-终端渲染视频的架构限制：每一帧都要经过「子进程抽帧 → 终端图形协议传输」，12fps 已接近该路径的实用上限。精细观看走回车 IINA。
+终端渲染视频的架构限制：每帧都要经过「抽帧 → 终端图形协议传输」，12fps（24fps 影视素材的标准半速代理）已接近该路径的实用上限。需要全帧率时回车进 IINA。
 
-**Q：这套配置在 Intel Mac 上能用吗？**
-配置和插件都能用。仅 yazi 补丁需在本机重新编译（`build-patched-yazi.sh` 自动处理，不区分架构）。
+**Q：Intel Mac 能用吗？**
+配置和插件全部通用。仅 yazi 补丁需在本机重新编译，`build-patched-yazi.sh` 会自动处理。
 
-## 维护约定
+**Q：不用 Ghostty，用 iTerm2 / Terminal.app 行吗？**
+图片/视频预览依赖 kitty 图形协议，Ghostty、kitty、WezTerm 都支持；iTerm2 走自己的协议，防闪屏补丁对它无效；Terminal.app 完全不支持图片。
 
-- 在任何一台机器上改了配置，同步改回本仓库对应文件并推送，保持"仓库即事实来源"；
-- yazi 插件参数怎么调（帧率、清晰度、窗口倍数等），见 `yazi/README.md` 的速查表。
+## 目录结构与维护
+
+```
+ghostty/    终端配置 + Claude Code 渲染修复片段
+starship/   提示符配置
+yazi/       审片工作台：配置、双插件、IINA 脚本、防闪屏补丁、安装/编译脚本
+bat/        cat 替代品配置
+lazygit/    git TUI 配置（占位模板）
+lsd/        ls 替代品的别名
+assets/     本 README 的截图与演示动图
+```
+
+维护约定：在任何机器上改了配置，同步改回本仓库对应文件并推送，保持"仓库即事实来源"。yazi 的可调参数（轮播帧率、缩略图清晰度、IINA 窗口倍数等）见 `yazi/README.md` 的速查表。
