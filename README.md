@@ -8,7 +8,7 @@
 
 > **给 Claude Code 的总指引**：按第 0-7 节顺序执行，无需询问额外决策。
 > 所有配置一律以本仓库内的副本为准（外部 gist 已收编入库，出处见各节注释），
-> 用 `cp` 部署，不要从网络重新下载。第 8 节的密钥需要用户手动提供，不在仓库中。
+> 用 `cp` 部署，不要从网络重新下载。
 
 ## 0. 前置
 
@@ -117,18 +117,6 @@ claude() {
   fi
 }
 alias clauded="claude --dangerously-skip-permissions"
-```
-
-## 8. 密钥与私有环境变量（不入库，需手动迁移）
-
-以下环境变量在旧机器的 `~/.zshrc` 中，**值不进 git 仓库**，需要用户从
-旧机器或密码管理器手动搬运：
-
-```
-ANTHROPIC_BASE_URL / ANTHROPIC_AUTH_TOKEN / CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC
-TAVILY_API_KEY / FIRECRAWL_API_KEY / JINA_API_KEY
-PIXVERSE_API_KEY
-GITHUB_PERSONAL_ACCESS_TOKEN
 ```
 
 ## 验证清单
